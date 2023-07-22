@@ -31,12 +31,14 @@ import {
   getPosts,
   getMemberTypes,
   getMemberType,
-  updateUser,
   deleteUser,
-  updateProfile,
   deleteProfile,
   deletePost,
-  updatePost,
+  changeUser,
+  changeProfile,
+  changePost,
+  subscribeTo,
+  unsubscribeFrom,
 } from './resolvers.js';
 import { UUIDType } from './types/uuid.js';
 
@@ -138,7 +140,7 @@ const mutationType = new GraphQLObjectType({
           ),
         },
       },
-      resolve: updateUser,
+      resolve: changeUser,
     },
     deleteUser: {
       type: GraphQLBoolean,
@@ -185,27 +187,18 @@ const mutationType = new GraphQLObjectType({
             new GraphQLInputObjectType({
               name: 'ChangeProfileInput',
               fields: () => ({
-                id: {
-                  type: new GraphQLNonNull(UUIDType),
-                },
                 isMale: {
-                  type: new GraphQLNonNull(GraphQLBoolean),
+                  type: GraphQLBoolean,
                 },
                 yearOfBirth: {
-                  type: new GraphQLNonNull(GraphQLInt),
-                },
-                userId: {
-                  type: new GraphQLNonNull(UUIDType),
-                },
-                memberTypeId: {
-                  type: new GraphQLNonNull(memberTypeId),
+                  type: GraphQLInt,
                 },
               }),
             }),
           ),
         },
       },
-      resolve: updateProfile,
+      resolve: changeProfile,
     },
     deleteProfile: {
       type: GraphQLBoolean,
@@ -222,9 +215,6 @@ const mutationType = new GraphQLObjectType({
             new GraphQLInputObjectType({
               name: 'CreatePostInput',
               fields: () => ({
-                id: {
-                  type: new GraphQLNonNull(UUIDType),
-                },
                 title: {
                   type: new GraphQLNonNull(GraphQLString),
                 },
@@ -252,24 +242,18 @@ const mutationType = new GraphQLObjectType({
             new GraphQLInputObjectType({
               name: 'ChangePostInput',
               fields: () => ({
-                id: {
-                  type: UUIDType,
-                },
                 title: {
                   type: GraphQLString,
                 },
                 content: {
                   type: GraphQLString,
                 },
-                authorId: {
-                  type: UUIDType,
-                },
               }),
             }),
           ),
         },
       },
-      resolve: updatePost,
+      resolve: changePost,
     },
     deletePost: {
       type: GraphQLBoolean,
@@ -277,6 +261,30 @@ const mutationType = new GraphQLObjectType({
         id: { type: UUIDType },
       },
       resolve: deletePost,
+    },
+    subscribeTo: {
+      type: UserType,
+      args: {
+        userId: {
+          type: new GraphQLNonNull(UUIDType),
+        },
+        authorId: {
+          type: new GraphQLNonNull(UUIDType),
+        },
+      },
+      resolve: subscribeTo,
+    },
+    unsubscribeFrom: {
+      type: GraphQLBoolean,
+      args: {
+        userId: {
+          type: new GraphQLNonNull(UUIDType),
+        },
+        authorId: {
+          type: new GraphQLNonNull(UUIDType),
+        },
+      },
+      resolve: unsubscribeFrom,
     },
   },
 });
@@ -286,4 +294,4 @@ const schema = new GraphQLSchema({
   mutation: mutationType,
 });
 
-export {schema};
+export { schema };

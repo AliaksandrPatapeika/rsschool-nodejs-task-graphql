@@ -216,7 +216,7 @@ export const createUser = async (
   });
 };
 
-export const updateUser = async (
+export const changeUser = async (
   parent: unknown,
   args: { id: string; dto: Partial<User> },
   fastify: FastifyInstance,
@@ -250,7 +250,7 @@ export const createPost = async (
   });
 };
 
-export const updatePost = async (
+export const changePost = async (
   parent: unknown,
   args: { id: string; dto: Partial<Post> },
   fastify: FastifyInstance,
@@ -274,6 +274,49 @@ export const deletePost = async (
   return null;
 };
 
+export const subscribeTo = async (
+  parent: unknown,
+  args: {
+    userId: string;
+    authorId: string;
+  },
+  fastify: FastifyInstance,
+): Promise<User> => {
+  return await fastify.prisma.user.update({
+    where: { id: args.userId },
+    data: {
+      userSubscribedTo: {
+        create: {
+          authorId: args.authorId,
+        },
+      },
+    },
+  });
+};
+export const unsubscribeFrom = async (
+  parent: unknown,
+  args: {
+    userId: string;
+    authorId: string;
+  },
+  fastify: FastifyInstance,
+): Promise<boolean> => {
+  await fastify.prisma.user.update({
+    where: {
+      id: args.userId,
+    },
+    data: {
+      userSubscribedTo: {
+        deleteMany: {
+          authorId: args.authorId,
+        },
+      },
+    },
+  });
+
+  return true;
+};
+
 export const createProfile = async (
   parent: unknown,
   args: { dto: Omit<Profile, 'id'> },
@@ -284,7 +327,7 @@ export const createProfile = async (
   });
 };
 
-export const updateProfile = async (
+export const changeProfile = async (
   parent: unknown,
   args: { id: string; dto: Partial<Profile> },
   fastify: FastifyInstance,

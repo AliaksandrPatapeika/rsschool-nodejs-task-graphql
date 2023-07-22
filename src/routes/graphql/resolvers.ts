@@ -3,7 +3,7 @@ import { MemberType, Post, Profile, User } from '@prisma/client';
 
 export const getUser = async (
   parent: unknown,
-  args: { id: string },
+  args: User,
   fastify: FastifyInstance,
 ): Promise<User | null> => {
   const { id } = args;
@@ -20,7 +20,7 @@ export const getUsers = async (
   args: unknown,
   fastify: FastifyInstance,
 ): Promise<User[]> => {
-  return fastify.prisma.user.findMany();
+  return await fastify.prisma.user.findMany();
 };
 
 export const getPost = async (
@@ -41,7 +41,7 @@ export const getPosts = async (
   args: unknown,
   fastify: FastifyInstance,
 ): Promise<Post[]> => {
-  return fastify.prisma.post.findMany();
+  return await fastify.prisma.post.findMany();
 };
 
 export const getProfile = async (
@@ -62,7 +62,7 @@ export const getProfiles = async (
   args: unknown,
   fastify: FastifyInstance,
 ): Promise<Profile[]> => {
-  return fastify.prisma.profile.findMany();
+  return await fastify.prisma.profile.findMany();
 };
 
 export const getProfileFromUser = async (
@@ -114,7 +114,7 @@ export const getProfilesFromMemberType = async (
 ): Promise<Profile[]> => {
   const { id } = parent;
 
-  return fastify.prisma.profile.findMany({
+  return await fastify.prisma.profile.findMany({
     where: {
       memberTypeId: id,
     },
@@ -171,14 +171,14 @@ export const getAuthorFromPost = async (
   });
 };
 
-export const getPostFromUser = async (
+export const getPostsFromUser = async (
   parent: User,
   args: unknown,
   fastify: FastifyInstance,
 ): Promise<Post[]> => {
   const { id } = parent;
 
-  return fastify.prisma.post.findMany({
+  return await fastify.prisma.post.findMany({
     where: {
       authorId: id,
     },
@@ -203,7 +203,7 @@ export const getMemberTypes = async (
   args: unknown,
   fastify: FastifyInstance,
 ): Promise<MemberType[]> => {
-  return fastify.prisma.memberType.findMany();
+  return await fastify.prisma.memberType.findMany();
 };
 
 export const createUser = async (
@@ -211,7 +211,7 @@ export const createUser = async (
   args: { dto: Omit<User, 'id'> },
   fastify: FastifyInstance,
 ): Promise<User> => {
-  return fastify.prisma.user.create({
+  return await fastify.prisma.user.create({
     data: args.dto,
   });
 };
@@ -221,7 +221,7 @@ export const changeUser = async (
   args: { id: string; dto: Partial<User> },
   fastify: FastifyInstance,
 ): Promise<User | null> => {
-  return fastify.prisma.user.update({
+  return await fastify.prisma.user.update({
     where: { id: args.id },
     data: args.dto,
   });
@@ -245,7 +245,7 @@ export const createPost = async (
   args: { dto: Omit<Post, 'id'> },
   fastify: FastifyInstance,
 ): Promise<Post> => {
-  return fastify.prisma.post.create({
+  return await fastify.prisma.post.create({
     data: args.dto,
   });
 };
@@ -255,7 +255,7 @@ export const changePost = async (
   args: { id: string; dto: Partial<Post> },
   fastify: FastifyInstance,
 ): Promise<Post | null> => {
-  return fastify.prisma.post.update({
+  return await fastify.prisma.post.update({
     where: { id: args.id },
     data: args.dto,
   });
@@ -322,7 +322,7 @@ export const createProfile = async (
   args: { dto: Omit<Profile, 'id'> },
   fastify: FastifyInstance,
 ): Promise<Profile> => {
-  return fastify.prisma.profile.create({
+  return await fastify.prisma.profile.create({
     data: args.dto,
   });
 };
@@ -332,7 +332,7 @@ export const changeProfile = async (
   args: { id: string; dto: Partial<Profile> },
   fastify: FastifyInstance,
 ): Promise<Profile | null> => {
-  return fastify.prisma.profile.update({
+  return await fastify.prisma.profile.update({
     where: { id: args.id },
     data: args.dto,
   });

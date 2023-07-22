@@ -4,7 +4,6 @@ import {
   GraphQLFloat,
   GraphQLInt,
   GraphQLList,
-  GraphQLNonNull,
   GraphQLObjectType,
   GraphQLString,
 } from 'graphql';
@@ -12,7 +11,7 @@ import { UUIDType } from './types/uuid.js';
 import {
   getAuthorFromPost,
   getMemberTypeFromProfile,
-  getPostFromUser,
+  getPostsFromUser,
   getProfileFromUser,
   getProfilesFromMemberType,
   getSubscribedToUser,
@@ -31,6 +30,7 @@ export const memberTypeId = new GraphQLEnumType({
     },
   },
 });
+
 export const UserType: GraphQLObjectType = new GraphQLObjectType({
   name: 'User',
   fields: () => ({
@@ -49,7 +49,7 @@ export const UserType: GraphQLObjectType = new GraphQLObjectType({
     },
     posts: {
       type: PostsType,
-      resolve: getPostFromUser,
+      resolve: getPostsFromUser,
     },
     subscribedToUser: {
       type: UsersType,
@@ -62,9 +62,7 @@ export const UserType: GraphQLObjectType = new GraphQLObjectType({
   }),
 });
 
-export const UsersType = new GraphQLNonNull(
-  new GraphQLList(new GraphQLNonNull(UserType)),
-);
+export const UsersType = new GraphQLList(UserType);
 
 export const PostType: GraphQLObjectType = new GraphQLObjectType({
   name: 'Post',
@@ -88,9 +86,7 @@ export const PostType: GraphQLObjectType = new GraphQLObjectType({
   }),
 });
 
-export const PostsType = new GraphQLNonNull(
-  new GraphQLList(new GraphQLNonNull(PostType)),
-);
+export const PostsType = new GraphQLList(PostType);
 
 export const ProfileType: GraphQLObjectType = new GraphQLObjectType({
   name: 'Profile',
@@ -121,9 +117,7 @@ export const ProfileType: GraphQLObjectType = new GraphQLObjectType({
   }),
 });
 
-export const ProfilesType = new GraphQLNonNull(
-  new GraphQLList(new GraphQLNonNull(ProfileType)),
-);
+export const ProfilesType = new GraphQLList(ProfileType);
 
 export const MemberTypeType = new GraphQLObjectType({
   name: 'MemberType',
@@ -144,6 +138,4 @@ export const MemberTypeType = new GraphQLObjectType({
   }),
 });
 
-export const MemberTypesType = new GraphQLNonNull(
-  new GraphQLList(new GraphQLNonNull(MemberTypeType)),
-);
+export const MemberTypesType = new GraphQLList(MemberTypeType);

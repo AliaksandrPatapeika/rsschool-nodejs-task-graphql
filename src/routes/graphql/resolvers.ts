@@ -1,32 +1,50 @@
-import { FastifyInstance } from 'fastify';
-import { MemberType, Post, Profile, User } from '@prisma/client';
+import { MemberType, Post, Profile, User as UserDTO } from '@prisma/client';
+import { FastifyInstanceWithDataLoaders, User } from './types.js';
+import { GraphQLResolveInfo } from 'graphql/type/index.js';
+import {
+  parseResolveInfo,
+  ResolveTree,
+  simplifyParsedResolveInfoFragmentWithType,
+} from 'graphql-parse-resolve-info';
 
-export const getUser = async (
+const getUser = async (
   parent: unknown,
   args: User,
-  fastify: FastifyInstance,
-): Promise<User | null> => {
+  fastify: FastifyInstanceWithDataLoaders,
+): Promise<unknown> => {
   const { id } = args;
-
-  return await fastify.prisma.user.findUnique({
-    where: {
-      id,
-    },
-  });
+  return await fastify.dataLoaders.user.load(id);
 };
 
-export const getUsers = async (
+const getUsers = async (
   parent: unknown,
   args: unknown,
-  fastify: FastifyInstance,
+  fastify: FastifyInstanceWithDataLoaders,
+  info: GraphQLResolveInfo,
 ): Promise<User[]> => {
-  return await fastify.prisma.user.findMany();
+  const parsedInfo = parseResolveInfo(info);
+  const { fields } = simplifyParsedResolveInfoFragmentWithType(
+    parsedInfo as ResolveTree,
+    info.returnType,
+  );
+  const users = await fastify.prisma.user.findMany({
+    include: {
+      userSubscribedTo: 'userSubscribedTo' in fields,
+      subscribedToUser: 'subscribedToUser' in fields,
+    },
+  });
+
+  users.forEach((user) => {
+    fastify.dataLoaders.user.prime(user.id, user);
+  });
+
+  return users;
 };
 
-export const getPost = async (
+const getPost = async (
   parent: unknown,
   args: { id: string },
-  fastify: FastifyInstance,
+  fastify: FastifyInstanceWithDataLoaders,
 ): Promise<Post | null> => {
   const { id } = args;
   return await fastify.prisma.post.findUnique({
@@ -36,18 +54,18 @@ export const getPost = async (
   });
 };
 
-export const getPosts = async (
+const getPosts = async (
   parent: unknown,
   args: unknown,
-  fastify: FastifyInstance,
+  fastify: FastifyInstanceWithDataLoaders,
 ): Promise<Post[]> => {
   return await fastify.prisma.post.findMany();
 };
 
-export const getProfile = async (
+const getProfile = async (
   parent: unknown,
   args: { id: string },
-  fastify: FastifyInstance,
+  fastify: FastifyInstanceWithDataLoaders,
 ): Promise<Profile | null> => {
   const { id } = args;
   return await fastify.prisma.profile.findUnique({
@@ -57,35 +75,29 @@ export const getProfile = async (
   });
 };
 
-export const getProfiles = async (
+const getProfiles = async (
   parent: unknown,
   args: unknown,
-  fastify: FastifyInstance,
+  fastify: FastifyInstanceWithDataLoaders,
 ): Promise<Profile[]> => {
   return await fastify.prisma.profile.findMany();
 };
 
-export const getProfileFromUser = async (
+const getProfileFromUser = async (
   parent: User,
   args: unknown,
-  fastify: FastifyInstance,
-): Promise<Profile | null> => {
+  fastify: FastifyInstanceWithDataLoaders,
+): Promise<unknown> => {
   const { id } = parent;
-
-  return await fastify.prisma.profile.findUnique({
-    where: {
-      userId: id,
-    },
-  });
+  return await fastify.dataLoaders.profile.load(id);
 };
 
-export const getUserFromProfile = async (
+const getUserFromProfile = async (
   parent: Profile,
   args: unknown,
-  fastify: FastifyInstance,
+  fastify: FastifyInstanceWithDataLoaders,
 ): Promise<User | null> => {
   const { userId } = parent;
-
   return await fastify.prisma.user.findUnique({
     where: {
       id: userId,
@@ -93,27 +105,21 @@ export const getUserFromProfile = async (
   });
 };
 
-export const getMemberTypeFromProfile = async (
+const getMemberTypeFromProfile = async (
   parent: Profile,
   args: unknown,
-  fastify: FastifyInstance,
-): Promise<MemberType | null> => {
+  fastify: FastifyInstanceWithDataLoaders,
+): Promise<unknown> => {
   const { memberTypeId } = parent;
-
-  return await fastify.prisma.memberType.findUnique({
-    where: {
-      id: memberTypeId,
-    },
-  });
+  return await fastify.dataLoaders.memberType.load(memberTypeId);
 };
 
-export const getProfilesFromMemberType = async (
+const getProfilesFromMemberType = async (
   parent: MemberType,
   args: unknown,
-  fastify: FastifyInstance,
+  fastify: FastifyInstanceWithDataLoaders,
 ): Promise<Profile[]> => {
   const { id } = parent;
-
   return await fastify.prisma.profile.findMany({
     where: {
       memberTypeId: id,
@@ -121,49 +127,42 @@ export const getProfilesFromMemberType = async (
   });
 };
 
-export const getSubscribedToUser = async (
+const getSubscribedToUser = async (
   parent: User,
   args: unknown,
-  fastify: FastifyInstance,
-): Promise<User[]> => {
-  const { id } = parent;
+  fastify: FastifyInstanceWithDataLoaders,
+): Promise<unknown> => {
+  const { subscribedToUser } = parent;
 
-  return fastify.prisma.user.findMany({
-    where: {
-      userSubscribedTo: {
-        some: {
-          authorId: id,
-        },
-      },
-    },
-  });
+  if (subscribedToUser && subscribedToUser.length > 0) {
+    const subscriberIds = subscribedToUser.map(({ subscriberId }) => subscriberId);
+    return await fastify.dataLoaders.user.loadMany(subscriberIds);
+  }
+
+  return null;
 };
 
-export const getUserSubscribedTo = async (
+const getUserSubscribedTo = async (
   parent: User,
   args: unknown,
-  fastify: FastifyInstance,
-): Promise<User[]> => {
-  const { id } = parent;
+  fastify: FastifyInstanceWithDataLoaders,
+): Promise<unknown> => {
+  const { userSubscribedTo } = parent;
 
-  return fastify.prisma.user.findMany({
-    where: {
-      subscribedToUser: {
-        some: {
-          subscriberId: id,
-        },
-      },
-    },
-  });
+  if (userSubscribedTo && userSubscribedTo.length > 0) {
+    const authorIds = userSubscribedTo.map(({ authorId }) => authorId);
+    return await fastify.dataLoaders.user.loadMany(authorIds);
+  }
+
+  return null;
 };
 
-export const getAuthorFromPost = async (
+const getAuthorFromPost = async (
   parent: Post,
   args: unknown,
-  fastify: FastifyInstance,
+  fastify: FastifyInstanceWithDataLoaders,
 ): Promise<User | null> => {
   const { authorId } = parent;
-
   return await fastify.prisma.user.findUnique({
     where: {
       id: authorId,
@@ -171,24 +170,19 @@ export const getAuthorFromPost = async (
   });
 };
 
-export const getPostsFromUser = async (
+const getPostsFromUser = async (
   parent: User,
   args: unknown,
-  fastify: FastifyInstance,
-): Promise<Post[]> => {
+  fastify: FastifyInstanceWithDataLoaders,
+): Promise<unknown> => {
   const { id } = parent;
-
-  return await fastify.prisma.post.findMany({
-    where: {
-      authorId: id,
-    },
-  });
+  return await fastify.dataLoaders.post.load(id);
 };
 
-export const getMemberType = async (
+const getMemberType = async (
   parent: unknown,
   args: { id: string },
-  fastify: FastifyInstance,
+  fastify: FastifyInstanceWithDataLoaders,
 ): Promise<MemberType | null> => {
   const { id } = args;
   return await fastify.prisma.memberType.findUnique({
@@ -198,28 +192,28 @@ export const getMemberType = async (
   });
 };
 
-export const getMemberTypes = async (
+const getMemberTypes = async (
   parent: unknown,
   args: unknown,
-  fastify: FastifyInstance,
+  fastify: FastifyInstanceWithDataLoaders,
 ): Promise<MemberType[]> => {
   return await fastify.prisma.memberType.findMany();
 };
 
-export const createUser = async (
+const createUser = async (
   parent: unknown,
-  args: { dto: Omit<User, 'id'> },
-  fastify: FastifyInstance,
+  args: { dto: UserDTO },
+  fastify: FastifyInstanceWithDataLoaders,
 ): Promise<User> => {
   return await fastify.prisma.user.create({
     data: args.dto,
   });
 };
 
-export const changeUser = async (
+const changeUser = async (
   parent: unknown,
-  args: { id: string; dto: Partial<User> },
-  fastify: FastifyInstance,
+  args: { id: string; dto: UserDTO },
+  fastify: FastifyInstanceWithDataLoaders,
 ): Promise<User | null> => {
   return await fastify.prisma.user.update({
     where: { id: args.id },
@@ -227,10 +221,10 @@ export const changeUser = async (
   });
 };
 
-export const deleteUser = async (
+const deleteUser = async (
   parent: unknown,
   args: { id: string },
-  fastify: FastifyInstance,
+  fastify: FastifyInstanceWithDataLoaders,
 ): Promise<null> => {
   await fastify.prisma.user.delete({
     where: {
@@ -240,20 +234,20 @@ export const deleteUser = async (
   return null;
 };
 
-export const createPost = async (
+const createPost = async (
   parent: unknown,
-  args: { dto: Omit<Post, 'id'> },
-  fastify: FastifyInstance,
+  args: { dto: Post },
+  fastify: FastifyInstanceWithDataLoaders,
 ): Promise<Post> => {
   return await fastify.prisma.post.create({
     data: args.dto,
   });
 };
 
-export const changePost = async (
+const changePost = async (
   parent: unknown,
-  args: { id: string; dto: Partial<Post> },
-  fastify: FastifyInstance,
+  args: { id: string; dto: Post },
+  fastify: FastifyInstanceWithDataLoaders,
 ): Promise<Post | null> => {
   return await fastify.prisma.post.update({
     where: { id: args.id },
@@ -261,10 +255,10 @@ export const changePost = async (
   });
 };
 
-export const deletePost = async (
+const deletePost = async (
   parent: unknown,
   args: { id: string },
-  fastify: FastifyInstance,
+  fastify: FastifyInstanceWithDataLoaders,
 ): Promise<null> => {
   await fastify.prisma.post.delete({
     where: {
@@ -274,13 +268,13 @@ export const deletePost = async (
   return null;
 };
 
-export const subscribeTo = async (
+const subscribeTo = async (
   parent: unknown,
   args: {
     userId: string;
     authorId: string;
   },
-  fastify: FastifyInstance,
+  fastify: FastifyInstanceWithDataLoaders,
 ): Promise<User> => {
   return await fastify.prisma.user.update({
     where: { id: args.userId },
@@ -293,13 +287,14 @@ export const subscribeTo = async (
     },
   });
 };
-export const unsubscribeFrom = async (
+
+const unsubscribeFrom = async (
   parent: unknown,
   args: {
     userId: string;
     authorId: string;
   },
-  fastify: FastifyInstance,
+  fastify: FastifyInstanceWithDataLoaders,
 ): Promise<boolean> => {
   await fastify.prisma.user.update({
     where: {
@@ -317,20 +312,20 @@ export const unsubscribeFrom = async (
   return true;
 };
 
-export const createProfile = async (
+const createProfile = async (
   parent: unknown,
-  args: { dto: Omit<Profile, 'id'> },
-  fastify: FastifyInstance,
+  args: { dto: Profile },
+  fastify: FastifyInstanceWithDataLoaders,
 ): Promise<Profile> => {
   return await fastify.prisma.profile.create({
     data: args.dto,
   });
 };
 
-export const changeProfile = async (
+const changeProfile = async (
   parent: unknown,
-  args: { id: string; dto: Partial<Profile> },
-  fastify: FastifyInstance,
+  args: { id: string; dto: Profile },
+  fastify: FastifyInstanceWithDataLoaders,
 ): Promise<Profile | null> => {
   return await fastify.prisma.profile.update({
     where: { id: args.id },
@@ -338,10 +333,10 @@ export const changeProfile = async (
   });
 };
 
-export const deleteProfile = async (
+const deleteProfile = async (
   parent: unknown,
   args: { id: string },
-  fastify: FastifyInstance
+  fastify: FastifyInstanceWithDataLoaders,
 ): Promise<null> => {
   await fastify.prisma.profile.delete({
     where: {
@@ -349,4 +344,34 @@ export const deleteProfile = async (
     },
   });
   return null;
+};
+
+export {
+  getUser,
+  getUsers,
+  getPost,
+  getPosts,
+  getProfile,
+  getProfiles,
+  getProfileFromUser,
+  getUserFromProfile,
+  getMemberTypeFromProfile,
+  getProfilesFromMemberType,
+  getSubscribedToUser,
+  getUserSubscribedTo,
+  getAuthorFromPost,
+  getPostsFromUser,
+  getMemberType,
+  getMemberTypes,
+  createUser,
+  changeUser,
+  deleteUser,
+  createPost,
+  changePost,
+  deletePost,
+  subscribeTo,
+  unsubscribeFrom,
+  createProfile,
+  changeProfile,
+  deleteProfile,
 };

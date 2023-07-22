@@ -1,6 +1,9 @@
 import * as graphql from 'graphql';
 import * as types from './types.js';
 import * as resolvers from './resolvers.js';
+import DataLoader from 'dataloader';
+import { FastifyInstance } from 'fastify';
+import { MemberType, Post, Profile, User as UserDTO } from '@prisma/client';
 import { UUIDType } from './types/uuid.js';
 
 const memberTypeId = new graphql.GraphQLEnumType({
@@ -124,6 +127,31 @@ const MemberTypeType = new graphql.GraphQLObjectType({
 
 const MemberTypesType = new graphql.GraphQLList(MemberTypeType);
 
+type SubscribedType = {
+  subscriberId: string;
+  authorId: string;
+};
+
+interface User extends UserDTO {
+  userSubscribedTo?: SubscribedType[];
+  subscribedToUser?: SubscribedType[];
+}
+
+type Key = string;
+type Value = User | Post | Profile | MemberType;
+type LoaderFunction<V> = (keys: readonly Key[]) => Promise<V[]>;
+
+type DataLoadersData = {
+  user: DataLoader<Key, Value | undefined>;
+  post: DataLoader<Key, Value | undefined>;
+  profile: DataLoader<Key, Value | undefined>;
+  memberType: DataLoader<Key, Value | undefined>;
+};
+
+interface FastifyInstanceWithDataLoaders extends FastifyInstance {
+  dataLoaders: DataLoadersData;
+}
+
 export {
   UserType,
   UsersType,
@@ -134,4 +162,10 @@ export {
   MemberTypeType,
   MemberTypesType,
   memberTypeId,
+  User,
+  Key,
+  Value,
+  LoaderFunction,
+  DataLoadersData,
+  FastifyInstanceWithDataLoaders,
 };

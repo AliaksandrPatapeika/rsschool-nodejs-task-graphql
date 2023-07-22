@@ -3,8 +3,13 @@ import { createGqlResponseSchema, gqlResponseSchema } from './schemas.js';
 import { graphql, parse, validate } from 'graphql';
 import { schema } from './schema.js';
 import depthLimit from 'graphql-depth-limit';
+import { createDataLoaders } from './loaders.js';
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
+  const dataLoaders = createDataLoaders(fastify);
+
+  fastify.decorate('dataLoaders', dataLoaders);
+
   fastify.route({
     url: '/',
     method: 'POST',

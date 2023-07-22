@@ -1,6 +1,6 @@
 import DataLoader from 'dataloader';
 import { FastifyInstance } from 'fastify';
-import { DataLoadersData, LoaderFunction, User, Value } from './types.js';
+import { DataLoadersData, LoaderFunction, User, Value } from './types/types.js';
 import { MemberType, Post, Profile } from '@prisma/client';
 
 const createDataLoader = <K extends string, V extends Value>(

@@ -1,5 +1,5 @@
 import { MemberType, Post, Profile, User as UserDTO } from '@prisma/client';
-import { FastifyInstanceWithDataLoaders, User } from './types.js';
+import { FastifyInstanceWithDataLoaders, User } from './types/types.js';
 import { GraphQLResolveInfo } from 'graphql/type/index.js';
 import {
   parseResolveInfo,

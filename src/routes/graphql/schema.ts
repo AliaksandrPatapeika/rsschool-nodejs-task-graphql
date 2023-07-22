@@ -1,5 +1,5 @@
 import * as graphql from 'graphql';
-import * as types from './types.js';
+import * as types from './types/types.js';
 import * as resolvers from './resolvers.js';
 import { UUIDType } from './types/uuid.js';
 

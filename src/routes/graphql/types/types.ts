@@ -1,10 +1,10 @@
 import * as graphql from 'graphql';
 import * as types from './types.js';
-import * as resolvers from './resolvers.js';
+import * as resolvers from '../resolvers.js';
 import DataLoader from 'dataloader';
 import { FastifyInstance } from 'fastify';
 import { MemberType, Post, Profile, User as UserDTO } from '@prisma/client';
-import { UUIDType } from './types/uuid.js';
+import { UUIDType } from './uuid.js';
 
 const memberTypeId = new graphql.GraphQLEnumType({
   name: 'MemberTypeId',

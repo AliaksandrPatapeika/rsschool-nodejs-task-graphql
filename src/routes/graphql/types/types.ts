@@ -1,5 +1,4 @@
 import * as graphql from 'graphql';
-import * as types from './types.js';
 import * as resolvers from '../resolvers.js';
 import DataLoader from 'dataloader';
 import { FastifyInstance } from 'fastify';
@@ -31,19 +30,19 @@ const UserType: graphql.GraphQLObjectType = new graphql.GraphQLObjectType({
       type: graphql.GraphQLFloat,
     },
     profile: {
-      type: types.ProfileType,
+      type: ProfileType,
       resolve: resolvers.getProfileFromUser,
     },
     posts: {
-      type: types.PostsType,
+      type: PostsType,
       resolve: resolvers.getPostsFromUser,
     },
     subscribedToUser: {
-      type: types.UsersType,
+      type: UsersType,
       resolve: resolvers.getSubscribedToUser,
     },
     userSubscribedTo: {
-      type: types.UsersType,
+      type: UsersType,
       resolve: resolvers.getUserSubscribedTo,
     },
   }),
@@ -98,7 +97,7 @@ const ProfileType: graphql.GraphQLObjectType = new graphql.GraphQLObjectType({
       type: memberTypeId,
     },
     memberType: {
-      type: types.MemberTypeType,
+      type: MemberTypeType,
       resolve: resolvers.getMemberTypeFromProfile,
     },
   }),

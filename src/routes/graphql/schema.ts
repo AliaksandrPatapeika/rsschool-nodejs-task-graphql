@@ -1,295 +1,256 @@
-import {
-  GraphQLSchema,
-  GraphQLObjectType,
-  GraphQLNonNull,
-  GraphQLString,
-  GraphQLFloat,
-  GraphQLInputObjectType,
-  GraphQLBoolean,
-  GraphQLInt,
-} from 'graphql';
-import {
-  UserType,
-  PostType,
-  ProfileType,
-  UsersType,
-  PostsType,
-  ProfilesType,
-  MemberTypeType,
-  MemberTypesType,
-  memberTypeId,
-} from './types.js';
-import {
-  getUser,
-  getPost,
-  getProfile,
-  getProfiles,
-  createUser,
-  createPost,
-  createProfile,
-  getUsers,
-  getPosts,
-  getMemberTypes,
-  getMemberType,
-  deleteUser,
-  deleteProfile,
-  deletePost,
-  changeUser,
-  changeProfile,
-  changePost,
-  subscribeTo,
-  unsubscribeFrom,
-} from './resolvers.js';
+import * as graphql from 'graphql';
+import * as types from './types.js';
+import * as resolvers from './resolvers.js';
 import { UUIDType } from './types/uuid.js';
 
-const queryType = new GraphQLObjectType({
+const queryType = new graphql.GraphQLObjectType({
   name: 'Query',
   fields: {
     user: {
-      type: UserType,
+      type: types.UserType,
       args: {
         id: { type: UUIDType },
       },
-      resolve: getUser,
+      resolve: resolvers.getUser,
     },
     users: {
-      type: UsersType,
-      resolve: getUsers,
+      type: types.UsersType,
+      resolve: resolvers.getUsers,
     },
     post: {
-      type: PostType,
+      type: types.PostType,
       args: {
         id: { type: UUIDType },
       },
-      resolve: getPost,
+      resolve: resolvers.getPost,
     },
     posts: {
-      type: PostsType,
-      resolve: getPosts,
+      type: types.PostsType,
+      resolve: resolvers.getPosts,
     },
     profile: {
-      type: ProfileType,
+      type: types.ProfileType,
       args: {
         id: {
           type: UUIDType,
         },
       },
-      resolve: getProfile,
+      resolve: resolvers.getProfile,
     },
     profiles: {
-      type: ProfilesType,
-      resolve: getProfiles,
+      type: types.ProfilesType,
+      resolve: resolvers.getProfiles,
     },
     memberType: {
-      type: MemberTypeType,
+      type: types.MemberTypeType,
       args: {
-        id: { type: memberTypeId },
+        id: { type: types.memberTypeId },
       },
-      resolve: getMemberType,
+      resolve: resolvers.getMemberType,
     },
     memberTypes: {
-      type: MemberTypesType,
-      resolve: getMemberTypes,
+      type: types.MemberTypesType,
+      resolve: resolvers.getMemberTypes,
     },
   },
 });
 
-const mutationType = new GraphQLObjectType({
+const mutationType = new graphql.GraphQLObjectType({
   name: 'Mutation',
   fields: {
     createUser: {
-      type: UserType,
+      type: types.UserType,
       args: {
         dto: {
-          type: new GraphQLNonNull(
-            new GraphQLInputObjectType({
+          type: new graphql.GraphQLNonNull(
+            new graphql.GraphQLInputObjectType({
               name: 'CreateUserInput',
               fields: () => ({
                 name: {
-                  type: new GraphQLNonNull(GraphQLString),
+                  type: new graphql.GraphQLNonNull(graphql.GraphQLString),
                 },
                 balance: {
-                  type: new GraphQLNonNull(GraphQLFloat),
+                  type: new graphql.GraphQLNonNull(graphql.GraphQLFloat),
                 },
               }),
             }),
           ),
         },
       },
-      resolve: createUser,
+      resolve: resolvers.createUser,
     },
     changeUser: {
-      type: UserType,
+      type: types.UserType,
       args: {
         id: {
-          type: new GraphQLNonNull(UUIDType),
+          type: new graphql.GraphQLNonNull(UUIDType),
         },
         dto: {
-          type: new GraphQLNonNull(
-            new GraphQLInputObjectType({
+          type: new graphql.GraphQLNonNull(
+            new graphql.GraphQLInputObjectType({
               name: 'ChangeUserInput',
               fields: () => ({
                 name: {
-                  type: GraphQLString,
+                  type: graphql.GraphQLString,
                 },
                 balance: {
-                  type: GraphQLFloat,
+                  type: graphql.GraphQLFloat,
                 },
               }),
             }),
           ),
         },
       },
-      resolve: changeUser,
+      resolve: resolvers.changeUser,
     },
     deleteUser: {
-      type: GraphQLBoolean,
+      type: graphql.GraphQLBoolean,
       args: {
         id: { type: UUIDType },
       },
-      resolve: deleteUser,
+      resolve: resolvers.deleteUser,
     },
     createProfile: {
-      type: ProfileType,
+      type: types.ProfileType,
       args: {
         dto: {
-          type: new GraphQLNonNull(
-            new GraphQLInputObjectType({
+          type: new graphql.GraphQLNonNull(
+            new graphql.GraphQLInputObjectType({
               name: 'CreateProfileInput',
               fields: () => ({
                 isMale: {
-                  type: new GraphQLNonNull(GraphQLBoolean),
+                  type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean),
                 },
                 yearOfBirth: {
-                  type: new GraphQLNonNull(GraphQLInt),
+                  type: new graphql.GraphQLNonNull(graphql.GraphQLInt),
                 },
                 userId: {
-                  type: new GraphQLNonNull(UUIDType),
+                  type: new graphql.GraphQLNonNull(UUIDType),
                 },
                 memberTypeId: {
-                  type: new GraphQLNonNull(memberTypeId),
+                  type: new graphql.GraphQLNonNull(types.memberTypeId),
                 },
               }),
             }),
           ),
         },
       },
-      resolve: createProfile,
+      resolve: resolvers.createProfile,
     },
     changeProfile: {
-      type: ProfileType,
+      type: types.ProfileType,
       args: {
         id: {
-          type: new GraphQLNonNull(UUIDType),
+          type: new graphql.GraphQLNonNull(UUIDType),
         },
         dto: {
-          type: new GraphQLNonNull(
-            new GraphQLInputObjectType({
+          type: new graphql.GraphQLNonNull(
+            new graphql.GraphQLInputObjectType({
               name: 'ChangeProfileInput',
               fields: () => ({
                 isMale: {
-                  type: GraphQLBoolean,
+                  type: graphql.GraphQLBoolean,
                 },
                 yearOfBirth: {
-                  type: GraphQLInt,
+                  type: graphql.GraphQLInt,
                 },
               }),
             }),
           ),
         },
       },
-      resolve: changeProfile,
+      resolve: resolvers.changeProfile,
     },
     deleteProfile: {
-      type: GraphQLBoolean,
+      type: graphql.GraphQLBoolean,
       args: {
         id: { type: UUIDType },
       },
-      resolve: deleteProfile,
+      resolve: resolvers.deleteProfile,
     },
     createPost: {
-      type: PostType,
+      type: types.PostType,
       args: {
         dto: {
-          type: new GraphQLNonNull(
-            new GraphQLInputObjectType({
+          type: new graphql.GraphQLNonNull(
+            new graphql.GraphQLInputObjectType({
               name: 'CreatePostInput',
               fields: () => ({
                 title: {
-                  type: new GraphQLNonNull(GraphQLString),
+                  type: new graphql.GraphQLNonNull(graphql.GraphQLString),
                 },
                 content: {
-                  type: new GraphQLNonNull(GraphQLString),
+                  type: new graphql.GraphQLNonNull(graphql.GraphQLString),
                 },
                 authorId: {
-                  type: new GraphQLNonNull(UUIDType),
+                  type: new graphql.GraphQLNonNull(UUIDType),
                 },
               }),
             }),
           ),
         },
       },
-      resolve: createPost,
+      resolve: resolvers.createPost,
     },
     changePost: {
-      type: PostType,
+      type: types.PostType,
       args: {
         id: {
-          type: new GraphQLNonNull(UUIDType),
+          type: new graphql.GraphQLNonNull(UUIDType),
         },
         dto: {
-          type: new GraphQLNonNull(
-            new GraphQLInputObjectType({
+          type: new graphql.GraphQLNonNull(
+            new graphql.GraphQLInputObjectType({
               name: 'ChangePostInput',
               fields: () => ({
                 title: {
-                  type: GraphQLString,
+                  type: graphql.GraphQLString,
                 },
                 content: {
-                  type: GraphQLString,
+                  type: graphql.GraphQLString,
                 },
               }),
             }),
           ),
         },
       },
-      resolve: changePost,
+      resolve: resolvers.changePost,
     },
     deletePost: {
-      type: GraphQLBoolean,
+      type: graphql.GraphQLBoolean,
       args: {
         id: { type: UUIDType },
       },
-      resolve: deletePost,
+      resolve: resolvers.deletePost,
     },
     subscribeTo: {
-      type: UserType,
+      type: types.UserType,
       args: {
         userId: {
-          type: new GraphQLNonNull(UUIDType),
+          type: new graphql.GraphQLNonNull(UUIDType),
         },
         authorId: {
-          type: new GraphQLNonNull(UUIDType),
+          type: new graphql.GraphQLNonNull(UUIDType),
         },
       },
-      resolve: subscribeTo,
+      resolve: resolvers.subscribeTo,
     },
     unsubscribeFrom: {
-      type: GraphQLBoolean,
+      type: graphql.GraphQLBoolean,
       args: {
         userId: {
-          type: new GraphQLNonNull(UUIDType),
+          type: new graphql.GraphQLNonNull(UUIDType),
         },
         authorId: {
-          type: new GraphQLNonNull(UUIDType),
+          type: new graphql.GraphQLNonNull(UUIDType),
         },
       },
-      resolve: unsubscribeFrom,
+      resolve: resolvers.unsubscribeFrom,
     },
   },
 });
 
-const schema = new GraphQLSchema({
+const schema = new graphql.GraphQLSchema({
   query: queryType,
   mutation: mutationType,
 });

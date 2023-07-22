@@ -1,25 +1,9 @@
-import {
-  GraphQLBoolean,
-  GraphQLEnumType,
-  GraphQLFloat,
-  GraphQLInt,
-  GraphQLList,
-  GraphQLObjectType,
-  GraphQLString,
-} from 'graphql';
+import * as graphql from 'graphql';
+import * as types from './types.js';
+import * as resolvers from './resolvers.js';
 import { UUIDType } from './types/uuid.js';
-import {
-  getAuthorFromPost,
-  getMemberTypeFromProfile,
-  getPostsFromUser,
-  getProfileFromUser,
-  getProfilesFromMemberType,
-  getSubscribedToUser,
-  getUserFromProfile,
-  getUserSubscribedTo,
-} from './resolvers.js';
 
-export const memberTypeId = new GraphQLEnumType({
+const memberTypeId = new graphql.GraphQLEnumType({
   name: 'MemberTypeId',
   values: {
     basic: {
@@ -31,111 +15,123 @@ export const memberTypeId = new GraphQLEnumType({
   },
 });
 
-export const UserType: GraphQLObjectType = new GraphQLObjectType({
+const UserType: graphql.GraphQLObjectType = new graphql.GraphQLObjectType({
   name: 'User',
   fields: () => ({
     id: {
       type: UUIDType,
     },
     name: {
-      type: GraphQLString,
+      type: graphql.GraphQLString,
     },
     balance: {
-      type: GraphQLFloat,
+      type: graphql.GraphQLFloat,
     },
     profile: {
-      type: ProfileType,
-      resolve: getProfileFromUser,
+      type: types.ProfileType,
+      resolve: resolvers.getProfileFromUser,
     },
     posts: {
-      type: PostsType,
-      resolve: getPostsFromUser,
+      type: types.PostsType,
+      resolve: resolvers.getPostsFromUser,
     },
     subscribedToUser: {
-      type: UsersType,
-      resolve: getSubscribedToUser,
+      type: types.UsersType,
+      resolve: resolvers.getSubscribedToUser,
     },
     userSubscribedTo: {
-      type: UsersType,
-      resolve: getUserSubscribedTo,
+      type: types.UsersType,
+      resolve: resolvers.getUserSubscribedTo,
     },
   }),
 });
 
-export const UsersType = new GraphQLList(UserType);
+const UsersType = new graphql.GraphQLList(UserType);
 
-export const PostType: GraphQLObjectType = new GraphQLObjectType({
+const PostType: graphql.GraphQLObjectType = new graphql.GraphQLObjectType({
   name: 'Post',
   fields: () => ({
     id: {
       type: UUIDType,
     },
     title: {
-      type: GraphQLString,
+      type: graphql.GraphQLString,
     },
     content: {
-      type: GraphQLString,
+      type: graphql.GraphQLString,
     },
     authorId: {
       type: UUIDType,
     },
     author: {
       type: UserType,
-      resolve: getAuthorFromPost,
+      resolve: resolvers.getAuthorFromPost,
     },
   }),
 });
 
-export const PostsType = new GraphQLList(PostType);
+const PostsType = new graphql.GraphQLList(PostType);
 
-export const ProfileType: GraphQLObjectType = new GraphQLObjectType({
+const ProfileType: graphql.GraphQLObjectType = new graphql.GraphQLObjectType({
   name: 'Profile',
   fields: () => ({
     id: {
       type: UUIDType,
     },
     isMale: {
-      type: GraphQLBoolean,
+      type: graphql.GraphQLBoolean,
     },
     yearOfBirth: {
-      type: GraphQLInt,
+      type: graphql.GraphQLInt,
     },
     userId: {
       type: UUIDType,
     },
     user: {
       type: UserType,
-      resolve: getUserFromProfile,
+      resolve: resolvers.getUserFromProfile,
     },
     memberTypeId: {
       type: memberTypeId,
     },
     memberType: {
-      type: MemberTypeType,
-      resolve: getMemberTypeFromProfile,
+      type: types.MemberTypeType,
+      resolve: resolvers.getMemberTypeFromProfile,
     },
   }),
 });
 
-export const ProfilesType = new GraphQLList(ProfileType);
+const ProfilesType = new graphql.GraphQLList(ProfileType);
 
-export const MemberTypeType = new GraphQLObjectType({
+const MemberTypeType = new graphql.GraphQLObjectType({
   name: 'MemberType',
   fields: () => ({
     id: {
       type: memberTypeId,
     },
     discount: {
-      type: GraphQLFloat,
+      type: graphql.GraphQLFloat,
     },
     postsLimitPerMonth: {
-      type: GraphQLInt,
+      type: graphql.GraphQLInt,
     },
     profiles: {
       type: ProfilesType,
-      resolve: getProfilesFromMemberType,
+      resolve: resolvers.getProfilesFromMemberType,
     },
   }),
 });
 
-export const MemberTypesType = new GraphQLList(MemberTypeType);
+const MemberTypesType = new graphql.GraphQLList(MemberTypeType);
+
+export {
+  UserType,
+  UsersType,
+  PostType,
+  PostsType,
+  ProfileType,
+  ProfilesType,
+  MemberTypeType,
+  MemberTypesType,
+  memberTypeId,
+};
